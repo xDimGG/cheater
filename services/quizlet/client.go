@@ -67,7 +67,7 @@ func (c *Client) Request(method, endpoint string, body io.Reader) (resp *http.Re
 
 // Login makes a login request to Quizlet with the provided username and password
 func (c *Client) Login(username, password string) (err error) {
-	_, err = c.Request(http.MethodGet, "/login", nil)
+	_, err = c.Request(http.MethodGet, EndpointLogin, nil)
 	if err != nil {
 		return
 	}
@@ -80,6 +80,6 @@ func (c *Client) Login(username, password string) (err error) {
 		return
 	}
 
-	_, err = c.Request(http.MethodPost, "/login", bytes.NewReader(body))
+	_, err = c.Request(http.MethodPost, EndpointLogin, bytes.NewReader(body))
 	return
 }

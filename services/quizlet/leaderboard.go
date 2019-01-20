@@ -3,10 +3,7 @@ package quizlet
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -20,7 +17,7 @@ type leaderboardUpdate struct {
 
 // UpdateLeaderboard updates the logged-in user's score
 func (c *Client) UpdateLeaderboard(id string, score int) (err error) {
-	if _, err = c.Request(http.MethodGet, "/"+id, nil); err != nil {
+	if _, err = c.Request(http.MethodGet, EndpointStudy(id), nil); err != nil {
 		return
 	}
 
@@ -42,8 +39,6 @@ func (c *Client) UpdateLeaderboard(id string, score int) (err error) {
 		return
 	}
 
-	res, err := c.Request(http.MethodPost, "/"+id+"/match/highscores", bytes.NewReader(body))
-	io.Copy(os.Stdout, res.Body)
-	fmt.Println("")
+	_, err = c.Request(http.MethodPost, EndpointMatchHighScore(id), bytes.NewReader(body))
 	return
 }
