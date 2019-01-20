@@ -17,7 +17,6 @@ var (
 )
 
 func main() {
-	fmt.Println(quizletPassword)
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatalf("Failed to create session: %v", err)
