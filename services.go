@@ -3,15 +3,20 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/xdimgg/cheater/services/quizlet"
 )
 
 const (
-	quizletScore = 5
+	matchScore   = 5
+	gravityScore = math.MaxUint32
+	spellScore   = 0
 )
 
 var (
@@ -33,13 +38,56 @@ var serviceInitializers = map[string]func() (serviceFunc, error){
 			return
 		}
 
-		return func(content string) error {
+		return func(content string) (err error) {
+			content = strings.ToLower(content)
+
+			if strings.Contains(content, "refresh") {
+				ns, err := quizlet.New()
+				if err != nil {
+					return err
+				}
+
+				if err = s.Login(quizletUsername, quizletPassword); err != nil {
+					return err
+				}
+
+				s = ns
+				return nil
+			}
+
 			id := reQuizlet.FindString(content)
 			if id == "" {
 				return errNoMatch
 			}
 
-			return s.UpdateLeaderboard(id, quizletScore)
+			methods := [...]struct {
+				mode string
+				run  func() error
+			}{
+				{"match", func() error { return s.UpdateHighScore(id, "match", matchScore) }},
+				{"gravity", func() error { return s.UpdateHighScore(id, "gravity", gravityScore) }},
+				// {"learn", nil},
+				// {"write", nil},
+				// {"spell", func() error { return s.EndSpellGame(id, spellScore) }},
+			}
+
+			for _, m := range methods {
+				if strings.Contains(content, m.mode) {
+					return m.run()
+				}
+			}
+
+			for i, m := range methods {
+				if i != 0 {
+					time.Sleep(time.Second)
+				}
+
+				if err = m.run(); err != nil {
+					return
+				}
+			}
+
+			return nil
 		}, nil
 	},
 }
